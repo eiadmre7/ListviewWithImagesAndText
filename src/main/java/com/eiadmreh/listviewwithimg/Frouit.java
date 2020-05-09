@@ -1,10 +1,13 @@
 package com.eiadmreh.listviewwithimg;
 
+import android.graphics.Bitmap;
+
 public class Frouit {
     private String Name;
     private long Code;
     private double Price;
     private String imageUrl;
+    private Bitmap image;
 
     public Frouit() {
     }
@@ -42,6 +45,14 @@ public class Frouit {
 
     public String getImageUrl() {
         return imageUrl;
+    }
+
+    public void setImage(Bitmap image) {
+        this.image = image;
+    }
+
+    public Bitmap getImage() {
+        return image;
     }
 
     @Override

@@ -21,9 +21,10 @@ import androidx.annotation.Nullable;
 public class CustomListview extends ArrayAdapter<String> {
     private String[] fruitname;
     private String[] disc;
-    private String[] bitmaps;
+    private Bitmap[] bitmaps;
     private Activity context;
-    public CustomListview(Activity context,  String[] fruitname, String[] disc,String[] imgid) {
+    private ArrayList<Frouit> frouits;
+    public CustomListview(Activity context,  String[] fruitname, String[] disc,Bitmap[] imgid) {
         super(context,R.layout.listview_layout,fruitname);
 
         this.context=context;
@@ -31,6 +32,7 @@ public class CustomListview extends ArrayAdapter<String> {
         this.disc=disc;
         this.bitmaps=imgid;
     }
+
 
     @NonNull
     @Override
@@ -50,8 +52,8 @@ public class CustomListview extends ArrayAdapter<String> {
                 .with(context)
                 .load(bitmaps[position])
                 .into(viewHolder.ivw);*/
-        Bitmap bitmap = BitmapFactory.decodeFile(bitmaps[position]);
-        viewHolder.ivw.setImageBitmap(bitmap);
+        //Bitmap bitmap = BitmapFactory.decodeFile(bitmaps[position]);
+        viewHolder.ivw.setImageBitmap(bitmaps[position]);
         viewHolder.tvw1.setText(fruitname[position]);
         viewHolder.tvw2.setText(disc[position]);
 

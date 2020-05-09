@@ -2,19 +2,12 @@ package com.eiadmreh.listviewwithimg;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
-
-import android.content.ContentResolver;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.net.Uri;
 import android.os.Bundle;
-import android.webkit.MimeTypeMap;
-import android.widget.ArrayAdapter;
 import android.widget.ListView;
-
-import com.google.android.gms.tasks.OnFailureListener;
+import android.widget.Toast;
 import com.google.android.gms.tasks.OnSuccessListener;
-import com.google.android.gms.tasks.Task;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -39,8 +32,9 @@ public class MainActivity extends AppCompatActivity {
     public static ArrayList<Frouit> frouits;
     public static String[] fruitname;
     public static String[] disc;
-    public static String[] Urls;
+    public static Bitmap[] Urls;
     public static int SIZE=0;
+    private int index;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -62,86 +56,84 @@ public class MainActivity extends AppCompatActivity {
                         frouits.add(frouit);
                         SIZE++;
                     }
-                    fruitname=new String[SIZE];
-                    disc=new String[SIZE];
-                    Urls=new String[SIZE];
+                    fruitname = new String[SIZE];
+                    disc = new String[SIZE];
+                    Urls=new Bitmap[SIZE];
                     //init Prices
-                    for(int i=0;i<SIZE;i++){
-                        disc[i]=String.valueOf(frouits.get(i).gettPrice());
+                    for (int i = 0; i < SIZE; i++) {
+                        disc[i] = String.valueOf(frouits.get(i).gettPrice());
                     }
                     //init Names
-                    for(int i=0;i<SIZE;i++){
-                        fruitname[i]=frouits.get(i).gettName();
+                    for (int i = 0; i < SIZE; i++) {
+                        fruitname[i] = frouits.get(i).gettName();
                     }
                     //get Urls for images..
-                    for(int i=0;i<SIZE;i++){
-
-                        try {
-                            StorageReference riversRef = mStorageRef.child(frouits.get(i).getImageUrl());
-                            final File localFile = File.createTempFile("Tools", getImageType(frouits.get(i).getImageUrl()));
-                            final int finalJ = i;
-                            //Urls[i]=String.valueOf(riversRef);
-                            Urls[i]=localFile.getAbsolutePath();
-                            riversRef.getFile(localFile)
-                                    .addOnSuccessListener(new OnSuccessListener<FileDownloadTask.TaskSnapshot>() {
-                                        @Override
-                                        public void onSuccess(FileDownloadTask.TaskSnapshot taskSnapshot) {
-                                            // Successfully downloaded data to local file
-                                            // ...
-                                            //Urls[finalJ]=localFile.getAbsolutePath();
-                                            //Bitmap bitmap = BitmapFactory.decodeFile(localFile.getAbsolutePath());
-                                            //bitmaps[finalJ]=bitmap;
-
-
-                                        }
-                                    }).addOnFailureListener(new OnFailureListener() {
-
-                                @Override
-                                public void onFailure(@NonNull Exception exception) {
-                                    // Handle failed download
-                                    // ...
-
-                                }
-                            });
-                        }
-
-                        catch (IOException e) {
-                            e.printStackTrace();
-
-                        }
-
+                    index = 0;
+                    loadProductsImages();
+                    for (int i = 0; i < SIZE; i++) {
+                        Urls[i] = frouits.get(i).getImage();
                     }
+                }
+                   /*ArrayAdapter<Bitmap> myAdapter =
+                            new ArrayAdapter<Bitmap>(MainActivity.this, android.R.layout.simple_list_item_1,Urls );
+                    lst.setAdapter(myAdapter);
+                   CustomListview customListview = new CustomListview(MainActivity.this, fruitname,disc,Urls);*/
 
-                   /*ArrayAdapter<String> myAdapter =
-                            new ArrayAdapter<String>(MainActivity.this, android.R.layout.simple_list_item_1,Urls );
-                    lst.setAdapter(myAdapter);*/
 
-                   CustomListview customListview=new CustomListview(MainActivity.this,fruitname,disc,Urls);
-                   lst.setAdapter(customListview);
+
+            }
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+                Toast.makeText( MainActivity.this, databaseError.getMessage(), Toast.LENGTH_SHORT ).show();
+            }
+        } );
+    }
+
+    private void loadProductsImages() {
+
+        try{
+            StorageReference mStorageRef = FirebaseStorage.getInstance().getReference("Frouits");
+            StorageReference riversRef = mStorageRef.child( frouits.get( index ).getImageUrl() );
+            final File localFile = File.createTempFile( "Frouits", getImageType( frouits.get( index ).getImageUrl() ) );
+            riversRef.getFile( localFile ).addOnSuccessListener( new OnSuccessListener<FileDownloadTask.TaskSnapshot>() {
+                @Override
+                public void onSuccess(FileDownloadTask.TaskSnapshot taskSnapshot) {
+                    Bitmap bitmap = BitmapFactory.decodeFile( localFile.getAbsolutePath() );
+                    frouits.get( index ).setImage( bitmap );
+                    nextProduct();
 
                 }
+            } );
 
-            }
 
-            @Override
-            public void onCancelled(@NonNull DatabaseError databaseError) {
-
-            }
-
-        });
-
+        }catch (Exception e){
+            Toast.makeText( MainActivity.this, e.getMessage(),Toast.LENGTH_LONG ).show();
+        }
 
     }
+    private void nextProduct(){
+        index++;
+        if(index<frouits.size()){
+            loadProductsImages();
+        }else
+        {
+            FrouitsListView adapter = new FrouitsListView( MainActivity.this, frouits );
+            lst.setAdapter(adapter);
+           // CustomListview customListview=new CustomListview(MainActivity.this,fruitname,disc,Urls);
+           // lst.setAdapter(customListview);
+           // progressBarProducts.setVisibility( View.GONE );
+        }
+    }
 
-    public static String getImageType(String name){
-        String[] type = name.split( "\\." );
+    private String getImageType(String name){
+        String [] type = name.split( "\\." );
         return type[1];
     }
-
-    private String getFileExtension(Uri uri){
+}
+   /* private String getFileExtension(Uri uri){
         ContentResolver cR = getContentResolver();
         MimeTypeMap mime = MimeTypeMap.getSingleton();
         return mime.getExtensionFromMimeType( cR.getType( uri ) );
-    }
+    }*/
 
-}
+
